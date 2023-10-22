@@ -1,0 +1,13 @@
+﻿<MudPaper Class="pa-16 ma-2" Elevation="3">
+    
+    <h4>
+        Возникло исключение или ошибка :
+    </h4>
+    <br/>
+    @ExceptionMessage
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string ExceptionMessage { get; set; }
+}

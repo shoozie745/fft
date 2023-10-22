@@ -1,0 +1,109 @@
+﻿@page "/mudblazor-component"
+@using FourierTransform.PL.Models
+@using System.Numerics
+@using System.Text
+@inject IJSRuntime JSRuntime
+
+<MudGrid>
+    <MudItem md="12" sm="12" xs="12">
+        <div id="plotContainer" style="width: 100%; height: 400px;"></div>
+    </MudItem>
+</MudGrid>
+
+@code {
+    
+    [Parameter]
+    public GraphModel Model { get; set; }
+
+    private string jsFunction;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (Model.FirstSetComplexValues.Count > 0 && Model.SecondSetComplexValues.Count > 0)
+        {
+            var jsFunction = GenerateJsFunction(Model.FirstSetComplexValues, Model.SecondSetComplexValues);
+            JSRuntime.InvokeVoidAsync("eval", jsFunction);
+        }
+    }
+    
+    
+private string GenerateJsFunction(List<ComplexValue> values1, List<ComplexValue> values2)
+{
+    var jsFunctionBuilder = new StringBuilder();
+    jsFunctionBuilder.AppendLine("var x1 = [];");
+    jsFunctionBuilder.AppendLine("var y1 = [];");
+    jsFunctionBuilder.AppendLine("var x2 = [];");
+    jsFunctionBuilder.AppendLine("var y2 = [];");
+    jsFunctionBuilder.AppendLine();
+
+    // Use InvariantCulture to ensure consistent formatting with a period (.) as the decimal separator
+    var formatProvider = System.Globalization.CultureInfo.InvariantCulture;
+
+    jsFunctionBuilder.AppendLine("var complexValues1 = [");
+    foreach (var value in values1)
+    {
+        // Format the double values with InvariantCulture
+        jsFunctionBuilder.AppendLine($"    {{ x: {value.Real.ToString(formatProvider)}, y: {value.Imaginary.ToString(formatProvider)} }},");
+    }
+    jsFunctionBuilder.AppendLine("];");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("complexValues1.forEach(function(value) {");
+    jsFunctionBuilder.AppendLine("    x1.push(value.x);");
+    jsFunctionBuilder.AppendLine("    y1.push(value.y);");
+    jsFunctionBuilder.AppendLine("});");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("var complexValues2 = [");
+    foreach (var value in values2)
+    {
+        // Format the double values with InvariantCulture
+        jsFunctionBuilder.AppendLine($"    {{ x: {value.Real.ToString(formatProvider)}, y: {value.Imaginary.ToString(formatProvider)} }},");
+    }
+    jsFunctionBuilder.AppendLine("];");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("complexValues2.forEach(function(value) {");
+    jsFunctionBuilder.AppendLine("    x2.push(value.x);");
+    jsFunctionBuilder.AppendLine("    y2.push(value.y);");
+    jsFunctionBuilder.AppendLine("});");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("var trace1 = {");
+    jsFunctionBuilder.AppendLine("    x: x1,");
+    jsFunctionBuilder.AppendLine("    y: y1,");
+    jsFunctionBuilder.AppendLine("    mode: 'markers',");
+    jsFunctionBuilder.AppendLine("    type: 'scatter',");
+    jsFunctionBuilder.AppendLine("    name: 'Set 1'");
+    jsFunctionBuilder.AppendLine("};");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("var trace2 = {");
+    jsFunctionBuilder.AppendLine("    x: x2,");
+    jsFunctionBuilder.AppendLine("    y: y2,");
+    jsFunctionBuilder.AppendLine("    mode: 'markers',");
+    jsFunctionBuilder.AppendLine("    type: 'scatter',");
+    jsFunctionBuilder.AppendLine("    name: 'Set 2'");
+    jsFunctionBuilder.AppendLine("};");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("var layout = {");
+    jsFunctionBuilder.AppendLine("    title: 'Plot of Complex Numbers',");
+    jsFunctionBuilder.AppendLine("    xaxis: {");
+    jsFunctionBuilder.AppendLine("        title: 'Real Part'");
+    jsFunctionBuilder.AppendLine("    },");
+    jsFunctionBuilder.AppendLine("    yaxis: {");
+    jsFunctionBuilder.AppendLine("        title: 'Imaginary Part'");
+    jsFunctionBuilder.AppendLine("    },");
+    jsFunctionBuilder.AppendLine("    autosize: true,");
+    jsFunctionBuilder.AppendLine("    responsive: true");
+    jsFunctionBuilder.AppendLine("};");
+    jsFunctionBuilder.AppendLine();
+
+    jsFunctionBuilder.AppendLine("Plotly.newPlot('plotContainer', [trace1, trace2], layout);");
+
+    return jsFunctionBuilder.ToString();
+}
+}

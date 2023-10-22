@@ -1,0 +1,49 @@
+﻿@page "/real-number-functions-discrete-chart"
+@using FourierTransform.PL.Models
+@inject IJSRuntime JSRuntime
+
+<MudContainer>
+    <div id="plotly-chart" style="height: 500px;"></div>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public RealGraphModel Model { get; set; }
+
+    protected override void OnParametersSet()
+    {
+     string plotlyChartFunction = @"
+        function createPlotlyChart(xValues, y1Values, y2Values) {
+            const trace1 = {
+                x: xValues,
+                y: y1Values,
+                mode: 'markers',
+                name: 'Function 1',
+                marker: { color: 'blue' }
+            };
+
+            const trace2 = {
+                x: xValues,
+                y: y2Values,
+                mode: 'markers',
+                name: 'Function 2',
+                marker: { color: 'red' }
+            };
+
+            const data = [trace1, trace2];
+
+            const layout = {
+                title: 'Real Number Functions (Discrete)',
+                xaxis: { title: 'x' },
+                yaxis: { title: 'y' }
+            };
+
+            Plotly.newPlot('plotly-chart', data, layout);
+        }
+    ";
+         JSRuntime.InvokeVoidAsync("eval", plotlyChartFunction);
+         JSRuntime.InvokeVoidAsync("createPlotlyChart", Model.GridValues, Model.FirstSetDoubleValues, Model.SecondSetDoubleValues);
+
+    }
+}
